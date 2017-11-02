@@ -449,7 +449,7 @@ launch.App<-function(...){
                         shiny::p("Wilson, E.,",
                                  shiny::a("A practical guide to value of information analysis, ",href="https://link.springer.com/article/10.1007%2Fs40273-014-0219-x"),
                                  shiny::em("PharmacoEconomics"),"2015"),
-                        shiny::p("Steuten L., van de Wetering G., Groothuis-Oudshoorn K. and Retèl V.,",
+                        shiny::p("Steuten L., van de Wetering G., Groothuis-Oudshoorn K. and Ret\U+00E9l V.,",
                                  shiny::a("A Systematic and Critical Review of the Evolving Methods and Applications of Value of Information in Academia and Practice, ",
                                           href="https://link.springer.com/article/10.1007%2Fs40273-012-0008-3"),
                                  shiny::em("PharmacoEconomics"),"2013"),
