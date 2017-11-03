@@ -245,64 +245,40 @@ launch.App<-function(...){
                  Pop=Pop,Time=Time,Dis=input$Dis,
                  wtp=as.numeric(input$wtp.CE),N=N.chosen.CE)
       }
-
-
-
-
     })
 
     #Optimal Sample Size
-    output$SS<-shiny::renderText({
-      evsi<-evsi()
-      if(is.null(input$Pop.OS)){return(NULL)}
-      if(is.null(input$Time.OS)){return(NULL)}
-      pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
-      setup<-as.numeric(c(input$Setupmin,input$Setupmax))
-      suppressWarnings(optimal<-optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
-      paste("The optimal sample size for this study is marked by a red triangle on the graph above and is equal to ",
-            optimal$SS.max,
-            ". However, any study with the sample size between",
-            optimal$SS.I[1]," and ",optimal$SS.I[2],
-            " has a value within 5% of this optimal value - where this area is marked with the red line on the graph.",sep="")
-      
-      
+    output$SS<-shiny::renderUI({
+       evsi<-evsi()
+       if(is.null(input$Pop.OS)){return(NULL)}
+       if(is.null(input$Time.OS)){return(NULL)}
+       pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
+       setup<-as.numeric(c(input$Setupmin,input$Setupmax))
+       suppressWarnings(optimal<-optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
+       shiny::tagList(
+          "The ",tags$b(tags$em("optimal sample size"))," for this study is marked by a red triangle on the graph above and is equal to ",
+          shiny::tags$b(optimal$SS.max),
+          ". However, any study with the sample size between ",
+          shiny::tags$b(optimal$SS.I[1]),
+          " and ",
+          shiny::tags$b(optimal$SS.I[2]),
+          " has a value within 5% of this optimal value - where this area is marked with the red line on the graph."
+       )
     }
     )
 
-    #output$SS.min<-shiny::renderText({
-    #  evsi<-evsi()
-    #  if(is.null(input$Pop.OS)){return(NULL)}
-    #  if(is.null(input$Time.OS)){return(NULL)}
-    #  pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
-    #  setup<-as.numeric(c(input$Setupmin,input$Setupmax))
-    #  suppressWarnings(optimal<-optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
-    #  optimal$SS.max
-    #  optimal$SS.I[1]
-    #}
-    #)
-    #output$SS.max<-shiny::renderText({
-    #  evsi<-evsi()
-    #  if(is.null(input$Pop.OS)){return(NULL)}
-    #  if(is.null(input$Time.OS)){return(NULL)}
-    #  pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
-    #  setup<-as.numeric(c(input$Setupmin,input$Setupmax))
-    #  suppressWarnings(optimal<-optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
-    #  optimal$SS.max
-    #  optimal$SS.I[2]
-    #}
-    #)
-    output$ENBS<-shiny::renderText({
+    output$ENBS<-shiny::renderUI({
       evsi<-evsi()
       if(is.null(input$Pop.OS)){return(NULL)}
       if(is.null(input$Time.OS)){return(NULL)}
       pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
       setup<-as.numeric(c(input$Setupmin,input$Setupmax))
-
-      
-      paste("At the optimal sample size the Expected Net Benefit of Sampling is equal to ",
-            round(suppressWarnings(optim.ss(evsi,setup,pp,as.numeric(input$Pop.OS),as.numeric(input$Time.OS),Dis=input$Dis,
-                                            wtp=as.numeric(input$wtp.OS))$ENBS),-1),
-      ". If this is greater than 0 then the study has economic benefit, if not then the ENBS demonstrates that the study not cost-effective.",sep="")
+      shiny::tagList(
+         "At the optimal sample size the", tags$b(tags$em("Expected Net Benefit of Sampling")), "is equal to ",
+         tags$b(format(round(suppressWarnings(optim.ss(evsi,setup,pp,as.numeric(input$Pop.OS),as.numeric(input$Time.OS),Dis=input$Dis,
+                                        wtp=as.numeric(input$wtp.OS))$ENBS),-1)),big.mark=" ",scientific=FALSE),
+         ". If this is greater than 0 then the study has economic benefit, if not then the ENBS demonstrates that the study not cost-effective."
+      )
     })
 
     output$ENBS.plot<-shiny::renderPlot({
@@ -710,8 +686,8 @@ launch.App<-function(...){
                                                                                                             ,width=4),
 
                                                                                         shiny::mainPanel(shiny::fluidRow(shiny::plotOutput("ENBS.plot"),
-                                                                                                                         shiny::column(5,shiny::p(shiny::textOutput(outputId="SS"))),
-                                                                                                                         shiny::column(7,shiny::p(shiny::textOutput(outputId="ENBS"))),
+                                                                                                                         shiny::column(6,shiny::p(shiny::uiOutput(outputId="SS"))),
+                                                                                                                         shiny::column(6,shiny::p(shiny::uiOutput(outputId="ENBS"))),
                                                                                                                          width=8))
                                                                                                                          )
           ))
