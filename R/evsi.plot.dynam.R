@@ -249,7 +249,6 @@ launch.App<-function(...){
 
     #Optimal Sample Size
     output$SS<-shiny::renderUI({
-<<<<<<< HEAD
        evsi<-evsi()
        if(is.null(input$Pop.OS)){return(NULL)}
        if(is.null(input$Time.OS)){return(NULL)}
@@ -265,52 +264,9 @@ launch.App<-function(...){
           shiny::tags$b(optimal$SS.I[2]),
           " has a value within 5% of this optimal value - where this area is marked with the red line on the graph."
        )
-=======
-      evsi<-evsi()
-      if(is.null(input$Pop.OS)){return(NULL)}
-      if(is.null(input$Time.OS)){return(NULL)}
-      pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
-      setup<-as.numeric(c(input$Setupmin,input$Setupmax))
-      suppressWarnings(optimal<-optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
-      shiny::tagList(
-        "The ",tags$b(tags$em("optimal sample size"))," for this study is marked by a red triangle on the graph above and is equal to ",
-        shiny::tags$b(optimal$SS.max),
-        ". However, any study with the sample size between ",
-        shiny::tags$b(optimal$SS.I[1]),
-        " and ",
-        shiny::tags$b(optimal$SS.I[2]),
-        " has a value within 5% of this optimal value - where this area is marked with the red line on the graph."
-      )
->>>>>>> 6c31b96b8ded3e94feb1570fc47e4ff6f6dd2745
     }
     )
-    
 
-<<<<<<< HEAD
-=======
-    #output$SS.min<-shiny::renderText({
-    #  evsi<-evsi()
-    #  if(is.null(input$Pop.OS)){return(NULL)}
-    #  if(is.null(input$Time.OS)){return(NULL)}
-    #  pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
-    #  setup<-as.numeric(c(input$Setupmin,input$Setupmax))
-    #  suppressWarnings(optimal<-optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
-    #  optimal$SS.max
-    #  optimal$SS.I[1]
-    #}
-    #)
-    #output$SS.max<-shiny::renderText({
-    #  evsi<-evsi()
-    #  if(is.null(input$Pop.OS)){return(NULL)}
-    #  if(is.null(input$Time.OS)){return(NULL)}
-    #  pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
-    #  setup<-as.numeric(c(input$Setupmin,input$Setupmax))
-    #  suppressWarnings(optimal<-optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
-    #  optimal$SS.max
-    #  optimal$SS.I[2]
-    #}
-    #)
->>>>>>> 6c31b96b8ded3e94feb1570fc47e4ff6f6dd2745
     output$ENBS<-shiny::renderUI({
       evsi<-evsi()
       if(is.null(input$Pop.OS)){return(NULL)}
@@ -318,17 +274,10 @@ launch.App<-function(...){
       pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
       setup<-as.numeric(c(input$Setupmin,input$Setupmax))
       shiny::tagList(
-<<<<<<< HEAD
          "At the optimal sample size the", tags$b(tags$em("Expected Net Benefit of Sampling")), "is equal to ",
          tags$b(format(round(suppressWarnings(optim.ss(evsi,setup,pp,as.numeric(input$Pop.OS),as.numeric(input$Time.OS),Dis=input$Dis,
                                         wtp=as.numeric(input$wtp.OS))$ENBS),-1)),big.mark=" ",scientific=FALSE),
          ". If this is greater than 0 then the study has economic benefit, if not then the ENBS demonstrates that the study not cost-effective."
-=======
-        "At the optimal sample size the", tags$b(tags$em("Expected Net Benefit of Sampling")), "is equal to ",
-        tags$b(format(round(suppressWarnings(optim.ss(evsi,setup,pp,as.numeric(input$Pop.OS),as.numeric(input$Time.OS),Dis=input$Dis,
-                                                      wtp=as.numeric(input$wtp.OS))$ENBS),-1)),big.mark=" ",scientific=FALSE),
-        ". If this is greater than 0 then the study has economic benefit, if not then the ENBS demonstrates that the study not cost-effective."
->>>>>>> 6c31b96b8ded3e94feb1570fc47e4ff6f6dd2745
       )
     })
     
