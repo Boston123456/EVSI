@@ -249,6 +249,7 @@ launch.App<-function(...){
 
     #Optimal Sample Size
     output$SS<-shiny::renderUI({
+<<<<<<< HEAD
        evsi<-evsi()
        if(is.null(input$Pop.OS)){return(NULL)}
        if(is.null(input$Time.OS)){return(NULL)}
@@ -264,9 +265,52 @@ launch.App<-function(...){
           shiny::tags$b(optimal$SS.I[2]),
           " has a value within 5% of this optimal value - where this area is marked with the red line on the graph."
        )
+=======
+      evsi<-evsi()
+      if(is.null(input$Pop.OS)){return(NULL)}
+      if(is.null(input$Time.OS)){return(NULL)}
+      pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
+      setup<-as.numeric(c(input$Setupmin,input$Setupmax))
+      suppressWarnings(optimal<-optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
+      shiny::tagList(
+        "The ",tags$b(tags$em("optimal sample size"))," for this study is marked by a red triangle on the graph above and is equal to ",
+        shiny::tags$b(optimal$SS.max),
+        ". However, any study with the sample size between ",
+        shiny::tags$b(optimal$SS.I[1]),
+        " and ",
+        shiny::tags$b(optimal$SS.I[2]),
+        " has a value within 5% of this optimal value - where this area is marked with the red line on the graph."
+      )
+>>>>>>> 6c31b96b8ded3e94feb1570fc47e4ff6f6dd2745
     }
     )
+    
 
+<<<<<<< HEAD
+=======
+    #output$SS.min<-shiny::renderText({
+    #  evsi<-evsi()
+    #  if(is.null(input$Pop.OS)){return(NULL)}
+    #  if(is.null(input$Time.OS)){return(NULL)}
+    #  pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
+    #  setup<-as.numeric(c(input$Setupmin,input$Setupmax))
+    #  suppressWarnings(optimal<-optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
+    #  optimal$SS.max
+    #  optimal$SS.I[1]
+    #}
+    #)
+    #output$SS.max<-shiny::renderText({
+    #  evsi<-evsi()
+    #  if(is.null(input$Pop.OS)){return(NULL)}
+    #  if(is.null(input$Time.OS)){return(NULL)}
+    #  pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
+    #  setup<-as.numeric(c(input$Setupmin,input$Setupmax))
+    #  suppressWarnings(optimal<-optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
+    #  optimal$SS.max
+    #  optimal$SS.I[2]
+    #}
+    #)
+>>>>>>> 6c31b96b8ded3e94feb1570fc47e4ff6f6dd2745
     output$ENBS<-shiny::renderUI({
       evsi<-evsi()
       if(is.null(input$Pop.OS)){return(NULL)}
@@ -274,12 +318,20 @@ launch.App<-function(...){
       pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
       setup<-as.numeric(c(input$Setupmin,input$Setupmax))
       shiny::tagList(
+<<<<<<< HEAD
          "At the optimal sample size the", tags$b(tags$em("Expected Net Benefit of Sampling")), "is equal to ",
          tags$b(format(round(suppressWarnings(optim.ss(evsi,setup,pp,as.numeric(input$Pop.OS),as.numeric(input$Time.OS),Dis=input$Dis,
                                         wtp=as.numeric(input$wtp.OS))$ENBS),-1)),big.mark=" ",scientific=FALSE),
          ". If this is greater than 0 then the study has economic benefit, if not then the ENBS demonstrates that the study not cost-effective."
+=======
+        "At the optimal sample size the", tags$b(tags$em("Expected Net Benefit of Sampling")), "is equal to ",
+        tags$b(format(round(suppressWarnings(optim.ss(evsi,setup,pp,as.numeric(input$Pop.OS),as.numeric(input$Time.OS),Dis=input$Dis,
+                                                      wtp=as.numeric(input$wtp.OS))$ENBS),-1)),big.mark=" ",scientific=FALSE),
+        ". If this is greater than 0 then the study has economic benefit, if not then the ENBS demonstrates that the study not cost-effective."
+>>>>>>> 6c31b96b8ded3e94feb1570fc47e4ff6f6dd2745
       )
     })
+    
 
     output$ENBS.plot<-shiny::renderPlot({
       evsi<-evsi()
@@ -297,11 +349,15 @@ launch.App<-function(...){
     #  min(evsi$attrib$N)
     #})
 
-    output$Nmax<-shiny::renderText({
+    output$Nmax<-shiny::renderUI({
       evsi<-evsi()
-      paste("Note that the optimal sample size can only be found between",min(evsi$attrib$N),"and",
-            max(evsi$attrib$N),
-            "as these are the boundaries within which the EVSI has been calculated. If the optimal sample size is given as either of these values you will need to recalculate the EVSI for alternative values of N to find the true optimal sample size.",sep="")
+      shiny::tagList(
+        "Note that the optimal sample size can only be found between ",shiny::tags$b(min(evsi$attrib$N)),
+        " and ",
+        shiny::tags$b(max(evsi$attrib$N)),
+        " as these are the boundaries within which the EVSI has been calculated. If the optimal sample size is given as either of 
+        these values you will need to recalculate the EVSI for alternative values of N to find the true optimal sample size."
+      )
     })
 
 
@@ -386,13 +442,13 @@ launch.App<-function(...){
                                                  shiny::h3("Willingness to Pay"),
                                                  shiny::p("The willingness to pay (WTP) is the amount of money the decision maker has avaliable to pay for an
                                                           additional 1 unit of benefit. This is typically given as a range and therefore the EVSI can be visualised
-                                                          across different WTP values in the tab WTP. For the other analyses the WTP must be fixed. Although the plots
+                                                          across different WTP values in the tab EVSI by Willingness-to-Pay. For the other analyses the WTP must be fixed. Although the plots
                                                           can easily be redrawn for different values of the WTP allowing the analysis to be easily completed for a
                                                           large number of different thresholds."),
                                                  shiny::h3("Sample Size"),
                                                  shiny::p("The sample size of the future trial is rarely determined before the EVSI analysis and one of the analysis
                                                           avaliable in this tool involves determining the optimal sample size for the future trial. The EVSI can be
-                                                          visualised by sample size on the tab N. The value of a sample is bounded above by the value of resolving
+                                                          visualised by sample size on the tab EVSI by Sample Size. The value of a sample is bounded above by the value of resolving
                                                           all uncertainty in the parameters of interest. The key information to be gleaned from the by N plot is the
                                                           speed at which the EVSI reachs this upper bound."),
                                                  shiny::h3("Trial Cost-effectivenes"),
@@ -453,13 +509,13 @@ launch.App<-function(...){
                                                  shiny::h3("Willingness to Pay"),
                                                  shiny::p("The willingness to pay (WTP) is the amount of money the decision maker has avaliable to pay for an
                                                           additional 1 unit of benefit. This is typically given as a range and therefore the EVSI can be visualised
-                                                          across different WTP values in the tab WTP. For the other analyses the WTP must be fixed. Although the plots
+                                                          across different WTP values in the tab EVSI by Willingness-to-Pay. For the other analyses the WTP must be fixed. Although the plots
                                                           can easily be redrawn for different values of the WTP allowing the analysis to be easily completed for a
                                                           large number of different thresholds."),
                                                  shiny::h3("Sample Size"),
                                                  shiny::p("The sample size of the future trial is rarely determined before the EVSI analysis and one of the analysis
                                                           avaliable in this tool involves determining the optimal sample size for the future trial. The EVSI can be
-                                                          visualised by sample size on the tab N. The value of a sample is bounded above by the value of resolving
+                                                          visualised by sample size on the tab EVSI by Sample Size. The value of a sample is bounded above by the value of resolving
                                                           all uncertainty in the parameters of interest. The key information to be gleaned from the by N plot is the
                                                           speed at which the EVSI reachs this upper bound."),
                                                  shiny::h3("Trial Cost-effectivenes"),
@@ -679,7 +735,7 @@ launch.App<-function(...){
                                                                                                             shiny::uiOutput("Pop.OSDynam"),
                                                                                                             shiny::uiOutput("Time.OSDynam"),
                                                                                                             shiny::p("It is possible to find the sample size for your trial that will give the maximum value for money."),
-                                                                                                            shiny::p(shiny::textOutput(outputId = "Nmax")),
+                                                                                                            shiny::p(shiny::uiOutput(outputId = "Nmax")),
                                                                                                             shiny::p("The plot for the ENBS allows you to assess how the ENBS is behaving for different sample sizes. Please
                                                                                                                      be aware that it is often possible for a large number of sample sizes to have similar economic value and therefore
                                                                                                                      the optimal sample size should be interpreted with care.")
