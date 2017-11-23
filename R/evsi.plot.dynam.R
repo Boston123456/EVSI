@@ -280,7 +280,7 @@ launch.App<-function(...){
          ". If this is greater than 0 then the study has economic benefit, if not then the ENBS demonstrates that the study not cost-effective."
       )
     })
-    
+
 
     output$ENBS.plot<-shiny::renderPlot({
       evsi<-evsi()
