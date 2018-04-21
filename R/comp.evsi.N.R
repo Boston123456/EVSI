@@ -83,7 +83,9 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
     inputs<-sample[,moniter[jags.params]]
 
     #Matrix Parameters
-    multiple.params<-moniter[-jags.params]
+    if(length(jags.params)!=0){
+    multiple.params<-moniter[-jags.params]}
+    else{multiple.params<-moniter}
 
     #Function to extract the matrix parameters from the jags object
     multiple.params.extract<-function(multi.params){
@@ -91,7 +93,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
       else{
         list.params<-list()
         length(list.params)<-length(multi.params)
-        for(j in 1:length(multiple.params)){
+        for(j in 1:length(multi.params)){
           list.params[j]<-list(as.numeric(sample[i,grep(multi.params[j],names(sample))]))
         }
         return(list.params)}
@@ -109,7 +111,8 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
   quantiles<-sample((1:Q)/(Q+1),replace=F)
   if(length(N.range)==2){N.samp<-trunc((seq(sqrt(N.range[1]),sqrt(N.range[2]),length.out = Q))^2)}
   if(length(N.range)>2){N.samp<-N.range}
-
+  while(abs(cor(quantiles,N.samp))>0.0005){quantiles<-sample(quantiles,Q,replace=FALSE)}
+  
   #Generate future samples by finding prior-predictive distribution
   if(update=="jags"){#Model can be written in jags.
     if(!isTRUE(requireNamespace("rjags",quietly=TRUE))) {
@@ -123,7 +126,9 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
     prior.pred.data<-unique(moniter)
     #Track both the data and the parameters of interest if either are needed.
     if(cl.dat=="character"){prior.pred.data <-unique(c(prior.pred.data,data))}
-    if(length(parameters)!=0){prior.pred.data<-unique(c(prior.pred.data,parameters))}
+    if(class(evi)=="evppi"){parameters<-evi$index}
+    prior.pred.data<-unique(c(prior.pred.data,parameters))
+
 
     ####Calculate EVSI by Quadrature####
     var.prepost<-list()
@@ -147,12 +152,20 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
         for(l in 1:length(data)){
           index.data[[l]]<-grep(data[l],colnames(PP.sample))
         }
+        index.params<-list()
+        for(l in 1:length(parameters)){
+          index.params[[l]]<-which(colnames(PP.sample)==parameters[l])
+        }
         length.data<-length(unlist(index.data))
         names.data<-data
         Data.Fut<-array()
+        #Selecting one row of the parameters of interest
+        #Find the quantile of one of the parameters of interest, then select the row with that...
+        index.pp<-sample(unlist(index.params),1)
+        index.choose<-which(PP.sample[,index.pp]==quantile(PP.sample[,index.pp],probs=quantiles[q],type=3))
         for(d in 1:length.data){
           #Creating list of the future data to give to jags
-          Data.Fut[unlist(index.data)[d]]<-as.numeric(quantile(PP.sample[,unlist(index.data)[d]],probs=quantiles[q],type=3))
+          Data.Fut[unlist(index.data)[d]]<-as.numeric(PP.sample[index.choose,unlist(index.data)[d]])
         }
         Data.Fut.list<-list()
         for(d in 1:length(index.data)){
@@ -303,6 +316,18 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
           y<-e.var-pre.var.e
         }
 
+        if(sd(y)==0){
+          data.a.b<-list(sigma.mu=sd(y)/2,
+                         sigma.tau=100,
+                         N=length(N.samp),
+                         shape.Nmax=0.0005/max(N.samp),
+                         var.PI=as.matrix(e.fit.var)[i,j],
+                         Nmax=max(N.samp),
+                         y=as.vector(y),
+                         x=as.vector(N.samp)
+          )
+        }
+        if(sd(y)!=0){
         data.a.b<-list(sigma.mu=sd(y)/2,
                        sigma.tau=1/sd(y),
                        N=length(N.samp),
@@ -312,7 +337,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
                        y=as.vector(y),
                        x=as.vector(N.samp)
         )
-
+        }
         Model.JAGS<- rjags::jags.model(file.curve.fitting,data=data.a.b,quiet=TRUE)
         update(Model.JAGS,n.burnin,progress.bar="none")
         beta.ab <- rjags::coda.samples(Model.JAGS, c("beta"), n.iter=n.iter,n.thin=n.thin,progress.bar="none")
@@ -336,15 +361,29 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
           y<-c.var-pre.var.c
         }
 
-        data.a.b<-list(sigma.mu=sd(y)/2,
-                       sigma.tau=1/sd(y),
-                       N=length(N.samp),
-                       shape.Nmax=0.0005/max(N.samp),
-                       var.PI=as.matrix(c.fit.var)[i,j],
-                       Nmax=max(N.samp),
-                       y=as.vector(y),
-                       x=as.vector(N.samp)
-        )
+        
+        if(sd(y)==0){
+          data.a.b<-list(sigma.mu=sd(y)/2,
+                         sigma.tau=100,
+                         N=length(N.samp),
+                         shape.Nmax=0.0005/max(N.samp),
+                         var.PI=as.matrix(e.fit.var)[i,j],
+                         Nmax=max(N.samp),
+                         y=as.vector(y),
+                         x=as.vector(N.samp)
+          )
+        }
+        if(sd(y)!=0){
+          data.a.b<-list(sigma.mu=sd(y)/2,
+                         sigma.tau=1/sd(y),
+                         N=length(N.samp),
+                         shape.Nmax=0.0005/max(N.samp),
+                         var.PI=as.matrix(e.fit.var)[i,j],
+                         Nmax=max(N.samp),
+                         y=as.vector(y),
+                         x=as.vector(N.samp)
+          )
+        }
 
         Model.JAGS<- rjags::jags.model(file.curve.fitting,data=data.a.b,quiet=TRUE)
         update(Model.JAGS,n.burnin,progress.bar="none")
@@ -366,12 +405,13 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
     }
     #Defines the model parameters that are required to calculate the costs and effects
     moniter<-names(which(sapply(nameofinterest,grep.fun,main=readLines(model.stats))>0))
-
+    
     #Track all the variables of interest
     prior.pred.data<-unique(moniter)
     #Track both the data and the parameters of interest if either are needed.
     if(cl.dat=="character"){prior.pred.data <-unique(c(prior.pred.data,data))}
-    if(length(parameters)!=0){prior.pred.data<-unique(c(prior.pred.data,parameters))}
+    if(class(evi)=="evppi"){parameters<-evi$index}
+    prior.pred.data<-unique(c(prior.pred.data,parameters))
 
     var.prepost<-list()
     start<-Sys.time()
@@ -390,17 +430,25 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
 
 
       if(cl.dat=="character"){
-              #Determine which columns contain the data
+        #Determine which columns contain the data
         index.data<-list()
         for(l in 1:length(data)){
           index.data[[l]]<-grep(data[l],colnames(PP.sample))
         }
+        index.params<-list()
+        for(l in 1:length(parameters)){
+          index.params[[l]]<-which(colnames(PP.sample)==parameters[l])
+        }
         length.data<-length(unlist(index.data))
         names.data<-data
         Data.Fut<-array()
+        #Selecting one row of the parameters of interest
+        #Find the quantile of one of the parameters of interest, then select the row with that...
+        index.pp<-sample(unlist(index.params),1)
+        index.choose<-which(PP.sample[,index.pp]==quantile(PP.sample[,index.pp],probs=quantiles[q],type=3))
         for(d in 1:length.data){
           #Creating list of the future data to give to jags
-          Data.Fut[unlist(index.data)[d]]<-as.numeric(quantile(PP.sample[,unlist(index.data)[d]],probs=quantiles[q],type=3))
+          Data.Fut[unlist(index.data)[d]]<-as.numeric(PP.sample[index.choose,unlist(index.data)[d]])
         }
         Data.Fut.list<-list()
         for(d in 1:length(index.data)){
@@ -409,6 +457,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
         Data.Fut<-Data.Fut.list
         names(Data.Fut)<-names.data
       }
+      
       if(cl.dat=="list"){
         Data.Fut<-data[[q]]
       }
@@ -506,7 +555,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
     ##### GB: Need to define the variables var.PI and x, or else when compiling the package R will throw a message for no-bindings
     var.PI=x=NULL
     #####
-    #Write the Model - remove need for R2OpenBUGS so can run with just JAGS.
+    #Write the Model
     model.ab<-c("model
                 {
                 beta ~ dnorm(Nmax, shape.Nmax)  I(0.00000E+00, )
@@ -551,21 +600,35 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
 
         y<-t(e.var[i,j]-pre.var.e[i,j])
 
-        data.a.b<-list(sigma.mu=sd(y)/2,
-                       sigma.tau=1/sd(y),
-                       N=length(N.samp),
-                       shape.Nmax=0.0005/max(N.samp),
-                       var.PI=e.fit.var[i,j],
-                       Nmax=max(N.samp),
-                       y=as.vector(y),
-                       x=as.vector(N.samp)
-        )
+        
+        if(sd(y)==0){
+          data.a.b<-list(sigma.mu=sd(y)/2,
+                         sigma.tau=100,
+                         N=length(N.samp),
+                         shape.Nmax=0.0005/max(N.samp),
+                         var.PI=as.matrix(e.fit.var)[i,j],
+                         Nmax=max(N.samp),
+                         y=as.vector(y),
+                         x=as.vector(N.samp)
+          )
+        }
+        if(sd(y)!=0){
+          data.a.b<-list(sigma.mu=sd(y)/2,
+                         sigma.tau=1/sd(y),
+                         N=length(N.samp),
+                         shape.Nmax=0.0005/max(N.samp),
+                         var.PI=as.matrix(e.fit.var)[i,j],
+                         Nmax=max(N.samp),
+                         y=as.vector(y),
+                         x=as.vector(N.samp)
+          )
+        }
 
-        Model.JAGS<- rjags::jags.model(file.curve.fitting,data=data.a.b,quiet=TRUE)
-        update(Model.JAGS,n.burnin,progress.bar="none")
-        beta.ab <- rjags::coda.samples(Model.JAGS, c("beta"), n.iter=n.iter,n.thin=n.thin,progress.bar="none")
+        beta.ab<- R2OpenBUGS::bugs(data.a.b,inits=NULL,parameters.to.save=c("beta"),
+                                      model.file=file.curve.fitting, n.burnin=n.burnin,n.iter=n.iter+n.burnin,n.thin=n.thin,n.chains=1,
+                                      DIC=FALSE,debug=FALSE)
 
-        beta.mat[,1,n.entry]<-as.data.frame(beta.ab[[1]])[,1]
+        beta.mat[,1,n.entry]<-as.data.frame(beta.ab$sims.matrix)[,1]
         n.entry<-n.entry+1
       }
     }
@@ -584,21 +647,34 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
           y<-c.var-pre.var.c
         }
 
-        data.a.b<-list(sigma.mu=sd(y)/2,
-                       sigma.tau=1/sd(y),
-                       N=length(N.samp),
-                       shape.Nmax=0.0005/max(N.samp),
-                       var.PI=c.fit.var[i,j],
-                       Nmax=max(N.samp),
-                       y=as.vector(y),
-                       x=as.vector(N.samp)
-        )
-
-        Model.JAGS<- rjags::jags.model(file.curve.fitting,data=data.a.b,quiet=TRUE)
-        update(Model.JAGS,n.burnin,progress.bar="none")
-        beta.ab <- rjags::coda.samples(Model.JAGS, c("beta"), n.iter=n.iter,n.thin=n.thin,progress.bar="none")
-
-        beta.mat[,2,n.entry]<-as.data.frame(beta.ab[[1]])[,1]
+        
+        if(sd(y)==0){
+          data.a.b<-list(sigma.mu=sd(y)/2,
+                         sigma.tau=100,
+                         N=length(N.samp),
+                         shape.Nmax=0.0005/max(N.samp),
+                         var.PI=as.matrix(e.fit.var)[i,j],
+                         Nmax=max(N.samp),
+                         y=as.vector(y),
+                         x=as.vector(N.samp)
+          )
+        }
+        if(sd(y)!=0){
+          data.a.b<-list(sigma.mu=sd(y)/2,
+                         sigma.tau=1/sd(y),
+                         N=length(N.samp),
+                         shape.Nmax=0.0005/max(N.samp),
+                         var.PI=as.matrix(e.fit.var)[i,j],
+                         Nmax=max(N.samp),
+                         y=as.vector(y),
+                         x=as.vector(N.samp)
+          )
+        }
+        beta.ab<- R2OpenBUGS::bugs(data.a.b,inits=NULL,parameters.to.save=c("beta"),
+                                   model.file=file.curve.fitting, n.burnin=n.burnin,n.iter=n.iter+n.burnin,n.thin=n.thin,n.chains=1,
+                                   DIC=FALSE,debug=FALSE)
+        
+        beta.mat[,1,n.entry]<-as.data.frame(beta.ab$sims.matrix)[,1]
         n.entry<-n.entry+1
       }
     }
